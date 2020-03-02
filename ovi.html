@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Scrollama: Sticky Side Example">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel='stylesheet' href='style.css'> -->
+    <style>
+        #scrolly {
+            position: relative;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            background-color: #f3f3f3;
+            padding: 1rem;
+        }
+
+        #scrolly>* {
+            -webkit-box-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+        }
+
+        article {
+            position: relative;
+            padding: 0 1rem;
+            max-width: 20rem;
+        }
+
+        figure {
+            position: -webkit-sticky;
+            position: sticky;
+            width: 100%;
+            margin: 0;
+            -webkit-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+            /* background-color: #8a8a8a; */
+            z-index: 0;
+        }
+
+        figure p {
+            text-align: center;
+            padding: 1rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -moz-transform: translate(-50%, -50%);
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .step {
+            margin: 0 auto 2rem auto;
+            background-color: #3b3b3b;
+            color: #fff;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step.is-active {
+            background-color: goldenrod;
+            color: #3b3b3b;
+        }
+
+        .step p {
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.5rem;
+        }
+    </style>
+
+<body>
+
+    <main>
+
+        <section id='scrolly'>
+
+            <article>
+                <div class='step' data-step='1'>
+                    <p>STEP 1</p>
+                </div>
+                <div class='step' data-step='2'>
+                    <p>STEP 2</p>
+                </div>
+                <div class='step' data-step='3'>
+                    <p>STEP 3</p>
+                </div>
+                <div class='step' data-step='4'>
+                    <p>STEP 4</p>
+                </div>
+            </article>
+
+            <figure>
+                <p>0</p>
+            </figure>
+        </section>
+
+        <section id='outro'></section>
+    </main>
+
+    <script src='https://unpkg.com/d3@5.9.1/dist/d3.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.1/simple_statistics.js"></script>
+
+    <script src="https://unpkg.com/intersection-observer@0.5.1/intersection-observer.js"></script>
+    <script src='stickyfill.min.js'></script>
+    <script src='scrollama.min.js'></script>
+    <script src="loadandplot.js"></script>
+    <script src="annualscatter.js"></script>
+    <script>
+        // using d3 for convenience
+        var main = d3.select("main");
+        var scrolly = main.select("#scrolly");
+        var figure = scrolly.select("figure");
+        var article = scrolly.select("article");
+        var step = article.selectAll(".step");
+
+
+
+        function init() {
+
+            var width = 800;
+            var height = window.innerHeight / 2;
+            var margin = {
+                top: 40,
+                bottom: 40,
+                left: 70,
+                right: 40
+            };
+
+            let dimensions = {
+                width: width,
+                height: height,
+                margin: {
+                    top: 10,
+                    right: 30,
+                    bottom: 40,
+                    left: 30,
+                },
+            }
+            dimensions.boundedWidth = dimensions.width - dimensions.margin.left - dimensions.margin.right
+            dimensions.boundedHeight = dimensions.height - dimensions.margin.top - dimensions.margin.bottom
+
+            const last = array => array[array.length - 1]
+
+            var g = figure
+                .append("svg")
+                .attr("class", "container")
+                .attr("viewBox", [0, 0, width, height]); // magic to make it resize!!
+            // .attr("width", dimensions.width)
+            // .attr("height", dimensions.height)
+
+
+            const bounds = g.append("g")
+                .style("transform", `translate(${
+            dimensions.margin.left
+          }px, ${
+            dimensions.margin.top
+          }px)`)
+
+
+            d3.json("allPlayerGames.json", d3.autoType).then(allPlayerGames => {
+                console.log(allPlayerGames);
+
+                const yDomGames = d3.max(allPlayerGames, d => d.games);
+
+                const yDomAge = d3.max(allPlayerGames, d => d.age)
+
+                const yScale = d3
+                    .scaleLinear()
+                    .domain([0, 900])
+                    .range([dimensions.boundedHeight, 0])
+                    .nice()
+
+                let xScale = d3
+                    .scaleLinear().domain([0, yDomGames])
+                    .range([0, dimensions.boundedWidth])
+                    .nice();
+
+                console.log(xScale);
+
+
+                const xAccessor = d => {
+                    // console.log(d.gameNum);
+                    return d.gameNum;
+                }
+
+                const yAccessor = d => {
+                    // console.log(d.cumgoals);
+                    return d.cumgoals;
+                }
+
+                const xAxisGenerator = d3.axisBottom().scale(xScale);
+
+                const yAxisGenerator = d3.axisLeft().scale(yScale)
+
+                const lineGenerator = d3
+                    .line()
+                    .x(d => xScale(xAccessor(d)))
+                    .y(d => yScale(yAccessor(d)));
+
+                const xAxis = bounds
+                    .append("g")
+                    .attr("class", "x-axis")
+                    .call(xAxisGenerator)
+                    .style("transform", `translateY(${dimensions.boundedHeight}px)`)
+                    .call(g =>
+                        g
+                        .append("text")
+                        .attr("class", "x-axis-label")
+                        .attr("x", 0)
+                        .attr("y", 30)
+                        .attr("fill", "black")
+                        .attr("text-anchor", "start")
+                        .text("Games Played")
+                    );
+
+                const yAxis = bounds
+                    .append("g")
+                    .call(yAxisGenerator)
+                    .call(g => g.select(".domain").remove())
+                    .call(g =>
+                        g
+                        .select(".tick:last-of-type text")
+                        .clone()
+                        // .append("text")
+                        .attr("x", 5)
+                        // .attr("y", dimensions.margin.top + 30)
+                        .attr("fill", "black")
+                        .attr("text-anchor", "start")
+                        .attr("font-weight", "bold")
+                        .text("Carrer Goals")
+                    );
+
+                // initialize the scrollama
+                var scroller = scrollama();
+
+                // generic window resize listener event
+                function handleResize() {
+                    // 1. update height of step elements
+                    var stepH = Math.floor(window.innerHeight * 0.75);
+                    step.style("height", stepH + "px");
+
+                    var figureHeight = window.innerHeight / 2;
+                    var figureMarginTop = (window.innerHeight - figureHeight) / 2;
+
+                    figure
+                        .style("height", figureHeight + "px")
+                        .style("top", figureMarginTop + "px");
+
+                    // 3. tell scrollama to update new element dimensions
+                    scroller.resize();
+                }
+
+                // scrollama event handlers
+                function handleStepEnter(response) {
+
+                    // do the stuff here!
+                    if (response.index === 0 && response.direction === "down") {
+                        console.log("setup chart")
+
+
+
+                        // Draw data
+                        lines = bounds.append("g");
+
+
+
+                        lines
+                            .selectAll(".line")
+                            .data(allPlayerGames)
+                            .enter()
+                            .append("path")
+                            .attr("d", d => lineGenerator(d.data))
+                            .style("fill", "none")
+                            .style("stroke", d => d.colour)
+                            .style("stroke-width", 2)
+                            .style("stroke-linejoin", "round");
+
+
+
+
+                        // add label and circle
+                        playerLabel = bounds
+                            .selectAll(".label")
+                            .data(allPlayerGames)
+                            .enter()
+                            .append("g")
+                            .attr("transform", d => {
+                                return `translate(${xScale(last(d.data).gameNum)}, ${yScale(
+        last(d.data).cumgoals
+      )})`;
+                            });
+
+                        const dots = playerLabel
+                            .append("circle")
+                            .attr("r", 4)
+                            .style("stroke", "white")
+                            .style("fill", d => d.colour);
+
+                        const playerName = playerLabel
+                            .append("text")
+                            .attr("x", 10)
+                            .attr("y", 5)
+                            .style("font-size", ".8em")
+                            .attr("fill", d => d.colour)
+                            .text(d => d.player);
+
+                        const playerGoals = playerLabel
+                            .append("text")
+                            .attr("x", 10)
+                            .attr("y", 18)
+                            .style("font-size", ".8em")
+                            .attr("fill", d => d.colour)
+                            .text(d => last(d.data).cumgoals);
+
+                        grid = g =>
+                            g
+                            .attr("stroke", "black")
+                            .attr("stroke-opacity", 0.1)
+                            .call(g =>
+                                g
+                                .append("g")
+                                .selectAll("line")
+                                .data(yScale.ticks())
+                                .enter()
+                                .append("line")
+                                .attr("y1", d => {
+                                    return 0.5 + yScale(d);
+                                })
+                                .attr("x1", 0)
+                                .attr("y2", d => 0.5 + yScale(d))
+                                .attr("x2", dimensions.boundedWidth)
+                            )
+
+                        bounds.append("g").call(grid);
+
+
+                    }
+                    if (response.index === 1) {
+
+                        xScale.domain([18, yDomAge]).nice();
+
+                        const newline = d3
+                            .line()
+                            .x(d => {
+                                // console.log(d);
+                                return xScale(d.age);
+                            })
+                            .y(d => yScale(d.cumgoals));
+
+                        // transition lines
+                        lines
+                            .selectAll("path")
+                            .data(allPlayerGames)
+                            .transition()
+                            .duration(1200)
+                            .ease(d3.easeLinear)
+                            .attr("d", d => newline(d.data));
+
+                        // transition dots
+                        playerLabel
+                            // .selectAll("g")
+                            .transition()
+                            .duration(1200)
+                            .ease(d3.easeLinear)
+                            .attr("transform", d => {
+                                return `translate(${xScale(last(d.data).age)}, ${yScale(
+          last(d.data).cumgoals
+        )})`;
+                            });
+
+                        xAxis
+                            .transition()
+                            .duration(1200)
+                            .ease(d3.easeLinear)
+                            .call(d3.axisBottom().scale(xScale));
+
+                        xAxis.select(".x-axis-label")
+                            .text("Age")
+
+
+
+                    }
+                    if (response.index === 0 && response.direction === "up") {
+                        xScale.domain([0, yDomGames]).nice();
+
+                        const newline = d3
+                            .line()
+                            .x(d => {
+                                // console.log(d);
+                                return xScale(d.age);
+                            })
+                            .y(d => yScale(d.cumgoals));
+
+                        // transition lines
+                        lines
+                            .selectAll("path")
+                            .data(allPlayerGames)
+                            .transition()
+                            .duration(1200)
+                            .ease(d3.easeLinear)
+                            .attr("d", d => lineGenerator(d.data))
+
+                        // transition dots
+                        playerLabel
+                            // .selectAll("g")
+                            .transition()
+                            .duration(1200)
+                            .ease(d3.easeLinear)
+                            .attr("transform", d => {
+                                return `translate(${xScale(last(d.data).gameNum)}, ${yScale(
+        last(d.data).cumgoals
+      )})`;
+                            });
+
+                        xAxis
+                            .transition()
+                            .duration(1200)
+                            .ease(d3.easeLinear)
+                            .call(d3.axisBottom().scale(xScale));
+
+                        xAxis.select(".x-axis-label")
+                            .text("Age")
+
+                    }
+
+
+
+
+                    console.log(response);
+                    // response = { element, direction, index }
+
+                    // add color to current step only
+                    step.classed("is-active", function (d, i) {
+                        return i === response.index;
+                    });
+
+                    // update graphic based on step
+                    figure.select("p").text(response.index + 1);
+                }
+
+                function setupStickyfill() {
+                    d3.selectAll(".sticky").each(function () {
+                        Stickyfill.add(this);
+                    });
+                }
+
+                setupStickyfill();
+
+                // 1. force a resize on load to ensure proper dimensions are sent to scrollama
+                handleResize();
+
+                // 2. setup the scroller passing options
+                // 		this will also initialize trigger observations
+                // 3. bind scrollama event handlers (this can be chained like below)
+                scroller
+                    .setup({
+                        step: "#scrolly article .step",
+                        offset: 0.33,
+                        debug: true
+                    })
+                    .onStepEnter(handleStepEnter);
+
+                // setup resize event
+                window.addEventListener("resize", handleResize);
+
+            });
+
+
+        }
+
+        // kick things off
+        init();
+    </script>
+
+
+</body>
