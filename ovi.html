@@ -80,15 +80,24 @@
 <body>
 
     <main>
+        <p>On January 1, 2018, Hungary split the region of Central Hungary, or Közép-Magyarország in Hungarian, into two
+            new regions: the Budapest region (containing the capital of the same name) and the surrounding region of
+            Pest.</p>
 
         <section id='scrolly'>
 
             <article>
                 <div class='step' data-step='1'>
-                    <p>STEP 1</p>
+                    <p>Wayne Gretzky's NHL record of 894 career goals was long thought unbeatable. </p>
+                    <p>However, Alex Ovechekin recently became the second fast player in NHL history to reach 700
+                        goals</p>
                 </div>
                 <div class='step' data-step='2'>
-                    <p>STEP 2</p>
+                    <p> Doing so while 34 years old.
+
+                    </p>
+                    <p>While 6 others, besides Gretzky have reached 700, Ovechkin seems poised to make an attempt at
+                        breaking the record.</p>
                 </div>
                 <div class='step' data-step='3'>
                     <p>STEP 3</p>
@@ -102,6 +111,9 @@
                 <p>0</p>
             </figure>
         </section>
+        <p>On January 1, 2018, Hungary split the region of Central Hungary, or Közép-Magyarország in Hungarian, into two
+            new regions: the Budapest region (containing the capital of the same name) and the surrounding region of
+            Pest.</p>
 
         <section id='outro'></section>
     </main>
@@ -149,6 +161,11 @@
             dimensions.boundedHeight = dimensions.height - dimensions.margin.top - dimensions.margin.bottom
 
             const last = array => array[array.length - 1]
+
+            const colours = {
+                "Ovechkin": "#c7212f",
+                "Gretzky": "#01183F"
+            }
 
             var g = figure
                 .append("svg")
@@ -428,7 +445,7 @@
                             .call(d3.axisBottom().scale(xScale));
 
                         xAxis.select(".x-axis-label")
-                            .text("Age")
+                            .text("Games Played")
 
                     }
 
@@ -464,7 +481,7 @@
                 scroller
                     .setup({
                         step: "#scrolly article .step",
-                        offset: 0.33,
+                        offset: 0.53,
                         debug: true
                     })
                     .onStepEnter(handleStepEnter);
