@@ -3,3 +3,5 @@ TO do
 - then animate Ovi's goal total by games
 - then transition X to age
 - voironoi lines, highline selected and show player, hide others
+- scatter plot of yearly goal totals. show what would be expected for normal drop off, allow user to move points vertically. https://observablehq.com/search?query=mouse%20drag%20points
+https://observablehq.com/@jazztap/explorable-dft

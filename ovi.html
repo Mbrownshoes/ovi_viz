@@ -76,7 +76,7 @@
         }
 
         .step p {
-            text-align: center;
+            text-align: left;
             padding: 1rem;
             font-size: 1rem;
         }
@@ -316,6 +316,7 @@
                     // console.log(d.gameNum);
                     return d.gameNum;
                 }
+                const xAccessorAge = d => d.age;
 
                 const yAccessor = d => {
                     // console.log(d.cumgoals);
@@ -365,7 +366,7 @@
                     );
 
 
-                // Create the Voronoi
+                // for voronoi 
                 const allData = [];
                 allPlayerGames.forEach(p => {
                     p.data.careerGoals = p.gs;
@@ -375,9 +376,11 @@
                 })
                 const flatData = allData.flat()
 
-                // console.log(flatData);
+                const tooltip = d3.select("#tooltip")
 
-                const delaunay = d3.Delaunay.from(
+                let onMouseEnter1, onMouseLeave1;
+
+                let delaunay = d3.Delaunay.from(
                     flatData,
                     d =>
                     xScale(xAccessor(d)),
@@ -385,44 +388,8 @@
                 )
 
                 const voronoi = delaunay.voronoi()
-                voronoi.xmax = dimensions.boundedWidth;
-                voronoi.ymax = dimensions.boundedHeight;
-
-                bounds.selectAll(".voronoi")
-                    .data(flatData)
-                    .enter().append("path")
-                    .attr("class", "voronoi")
-                    .attr("d", (d, i) => voronoi.renderCell(i))
-                    .on("mouseenter", onMouseEnter)
-                    .on("mouseleave", onMouseLeave);
-                // .attr("stroke", "salmon")
-
-                const tooltip = d3.select("#tooltip")
 
 
-                function onMouseEnter(datum) {
-                    tooltip.select("#name")
-                        .text(capitalizeFirstLetter(names[datum.id]))
-                    tooltip.select("#goals")
-                        .text(carrerGoals[datum.id] + " career goals")
-
-                    tooltip.style("opacity", .8)
-
-                    const x = xScale(xAccessor(datum)) +
-                        dimensions.margin.left
-                    const y = yScale(yAccessor(datum)) +
-                        dimensions.margin.top
-
-                    tooltip.style("transform", `translate(` +
-                        `calc( -50% + ${x}px),` +
-                        `calc(-100% + ${y}px)` +
-                        `)`)
-                }
-
-                function onMouseLeave() {
-                    tooltip.style("opacity", 0)
-                    // d3.select(this).style("stroke-width", 2)
-                }
 
                 // initialize the scrollama
                 var scroller = scrollama();
@@ -450,7 +417,105 @@
                     // do the stuff here!
                     if (response.index === 0 && response.direction === "down") {
                         console.log("setup chart")
+                        // Create the Voronoi
 
+
+                        // console.log(flatData);
+
+                        // delaunay = d3.Delaunay.from(
+                        //     flatData,
+                        //     d =>
+                        //     xScale(xAccessor(d)),
+                        //     d => yScale(yAccessor(d)),
+                        // )
+
+                        // const voronoi = delaunay.voronoi()
+                        voronoi.xmax = dimensions.boundedWidth;
+                        voronoi.ymax = dimensions.boundedHeight;
+
+                        bounds.selectAll(".voronoi")
+                            .data(flatData)
+                            .enter().append("path")
+                            .attr("class", "voronoi")
+                            .attr("d", (d, i) => voronoi.renderCell(i))
+                            .on("mouseenter", onMouseEnter)
+                            .on("mouseleave", onMouseLeave)
+                        // .on("mouseout", onMouseOut);
+                        // .attr("stroke", "salmon")
+
+
+
+
+
+                        function onMouseEnter(datum, i, nodes) {
+                            // console.log(datum);
+
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id && e.id !== "8471214"
+                                })
+                                .transition().duration(1)
+                                .style("stroke-width", 4)
+                                .style("stroke-opacity", 1);
+
+
+                            // d3.selectAll(".lines")
+                            //     .filter((e) => {
+                            //         return e.id !== datum.id && e.id !== 8471214
+                            //     })
+                            //     .transition().duration(1)
+                            //     // .style("stroke-width", 4)
+                            //     .style("stroke-opacity", 0.1);
+
+
+                            tooltip.select("#name")
+                                .text(capitalizeFirstLetter(names[datum.id]))
+                            tooltip.select("#goals")
+                                .style("font-size", ".7em")
+                                .text(carrerGoals[datum.id] + " career goals")
+
+                            tooltip.style("opacity", .8)
+
+
+                            const x = xScale(xAccessor(datum)) +
+                                dimensions.margin.left
+                            const y = yScale(yAccessor(datum)) +
+                                dimensions.margin.top
+
+                            tooltip.style("transform", `translate(` +
+                                `calc( -50% + ${x}px),` +
+                                `calc(-100% + ${y}px)` +
+                                `)`)
+
+
+                        }
+
+
+
+                        function onMouseLeave(datum) {
+                            tooltip.style("opacity", 0)
+
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id
+                                })
+                                .transition()
+                                .duration(1)
+                                .style("stroke-width", 2);
+
+                            d3.selectAll(".lines")
+                                // .filter((e) => {
+                                //     return e.id === datum.id
+                                // })
+                                .transition().duration(1)
+                                .style("stroke-opacity", d => {
+                                    if (d.player === 'gretzky') return 1
+                                    else if (d.player === 'ovechkin') return 0
+                                    else return 0.1
+
+                                });
+
+                        }
 
 
                         // Draw data
@@ -465,7 +530,8 @@
                             .append("path")
                             .attr("d", d => lineGenerator(d.data))
                             .style("fill", "none")
-                            .attr("id",d=> d.player)
+                            .attr("class", 'lines')
+                            .attr("id", d => d.player)
                             .style("stroke", d =>
                                 d.player === "ovechkin" || d.player === "gretzky" ?
                                 colours[d.player] : "black"
@@ -587,6 +653,12 @@
                         // animate Ovi's goals
                         // adapted from https://observablehq.com/@d3/connected-scatterplot 
 
+
+                        bounds.selectAll(".voronoi")
+                            .on("mouseenter", onMouseEnter1)
+                            .on("mouseleave", onMouseLeave1)
+
+
                         function length(path) {
                             return d3.create("svg:path").attr("d", path).node().getTotalLength();
                         }
@@ -596,11 +668,11 @@
                         const l = length(lineGenerator(allPlayerGames.filter(d => d.player ===
                                 "ovechkin")[0]
                             .data));
-                        console.log(lines)
+                        // console.log(lines)
 
                         const oviLine = lines
-                        .select("#ovechkin")
-                        // .append("path")
+                            .select("#ovechkin")
+                            // .append("path")
                             .datum(allPlayerGames.filter(d => d.player === "ovechkin")[0])
                             .attr("id", "oviLine")
                             .attr("fill", "none")
@@ -609,7 +681,7 @@
                             .attr("stroke-width", 2.5)
                             .attr("stroke-dasharray", `0,${l}`)
                             .attr("d", d => lineGenerator(d.data))
-                            .transition()
+                            .transition("sortbyage")
                             .duration(800)
                             .ease(d3.easeLinear)
                             .attr("stroke-dasharray", `${l},${l}`)
@@ -632,7 +704,7 @@
                         //     .delay(800).remove()
 
                         playerName
-                            .transition()
+                            .transition("namesort")
                             .delay(800)
                             .duration(200)
                             .ease(d3.easeLinear)
@@ -648,7 +720,7 @@
                             });
 
                         playerGoals
-                            .transition()
+                            .transition("goalsort")
                             .delay(800)
                             .duration(200)
                             .ease(d3.easeLinear)
@@ -664,7 +736,7 @@
                             });
 
                         dots
-                            .transition()
+                            .transition("dotsort")
                             .delay(800)
                             .duration(200)
                             .ease(d3.easeLinear)
@@ -679,7 +751,66 @@
 
                             });
 
+                        function onMouseEnter1(datum, i, nodes) {
+                            // console.log(datum);
 
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id
+                                })
+                                .transition().duration(1)
+                                .style("stroke-width", 4)
+                                .style("stroke-opacity", 1);
+
+
+                            tooltip.select("#name")
+                                .text(capitalizeFirstLetter(names[datum.id]))
+                            tooltip.select("#goals")
+                                .style("font-size", ".7em")
+                                .text(carrerGoals[datum.id] + " career goals")
+
+                            tooltip.style("opacity", .8)
+                            // const xAccessorAge = d => d.age;
+
+                            const x = xScale(xAccessor(datum)) +
+                                dimensions.margin.left
+                            const y = yScale(yAccessor(datum)) +
+                                dimensions.margin.top
+
+                            tooltip.style("transform", `translate(` +
+                                `calc( -50% + ${x}px),` +
+                                `calc(-100% + ${y}px)` +
+                                `)`)
+
+
+                        }
+
+
+
+                        function onMouseLeave1(datum) {
+                            tooltip.style("opacity", 0)
+
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id
+                                })
+                                .transition()
+                                .duration(1)
+                                .style("stroke-width", 2);
+
+                            d3.selectAll(".lines")
+                                // .filter((e) => {
+                                //     return e.id === datum.id
+                                // })
+                                .transition().duration(1)
+                                .style("stroke-opacity", d => {
+                                    if (d.player === 'gretzky' || d.player === 'ovechkin') return 1
+                                    // else if (d.player === 'ovechkin') return 0
+                                    else return 0.1
+
+                                });
+
+                        }
                     }
                     if (response.index === 2) {
 
@@ -693,11 +824,107 @@
                             })
                             .y(d => yScale(d.cumgoals));
 
+
+                        bounds.selectAll(".voronoi").remove()
+
+                        // console.log(flatData)
+                        delaunayAge = d3.Delaunay.from(
+                            flatData,
+                            d =>
+                            xScale(d.age),
+                            d => yScale(d.cumgoals),
+                        )
+
+
+
+
+                        const voronoiAge = delaunayAge.voronoi()
+                        voronoiAge.xmax = dimensions.boundedWidth;
+                        voronoiAge.ymax = dimensions.boundedHeight;
+
+                        bounds.selectAll(".voronoi")
+                            .data(flatData)
+                            .enter().append("path")
+                            .attr("class", "voronoi")
+                            .attr("d", (d, i) => voronoiAge.renderCell(i))
+                            .on("mouseenter", onMouseEnter2)
+                            // .on("mouseleave", onMouseLeave)
+                            .on("mouseout", onMouseLeave2);
+                        // .attr("stroke", "salmon")
+
+                        function onMouseEnter2(datum, i, nodes) {
+                            console.log("here")
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id
+                                })
+                                .transition().duration(1)
+                                .style("stroke-width", 4)
+                                .style("stroke-opacity", 1);
+
+
+                            // d3.selectAll(".lines")
+                            //     .filter((e) => {
+                            //         return e.id !== datum.id
+                            //     })
+                            //     .transition().duration(1)
+                            //     // .style("stroke-width", 4)
+                            //     .style("stroke-opacity", 0.1);
+
+
+                            tooltip.select("#name")
+                                .text(capitalizeFirstLetter(names[datum.id]))
+                            tooltip.select("#goals")
+                                .style("font-size", ".7em")
+                                .text(carrerGoals[datum.id] + " career goals")
+
+                            tooltip.style("opacity", .8)
+                            xScale.domain([18, yDomAge]).nice();
+
+                            const x = xScale(xAccessorAge(datum)) +
+                                dimensions.margin.left
+                            const y = yScale(yAccessor(datum)) +
+                                dimensions.margin.top
+
+                            tooltip.style("transform", `translate(` +
+                                `calc( -50% + ${x}px),` +
+                                `calc(-100% + ${y}px)` +
+                                `)`)
+
+
+                        }
+
+
+
+                        function onMouseLeave2(datum) {
+                            tooltip.style("opacity", 0)
+
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id
+                                })
+                                .transition()
+                                .duration(1)
+                                .style("stroke-width", 2);
+
+                            d3.selectAll(".lines")
+                                // .filter((e) => {
+                                //     return e.id === datum.id
+                                // })
+                                .transition().duration(1)
+                                .style("stroke-opacity", d => {
+                                    return d.player === 'gretzky' || d.player === 'ovechkin' ? 1 : 0.1
+
+                                });
+
+                        }
                         // transition lines
+                        console.log("starts now");
+
                         lines
                             .selectAll("path")
                             .data(allPlayerGames)
-                            .transition()
+                            .transition("sortage")
                             .duration(1200)
                             .ease(d3.easeLinear)
                             .attr("d", d => newline(d.data))
@@ -738,9 +965,94 @@
 
                     }
                     if (response.index === 0 && response.direction === "up") {
+                        console.log("back to 1");
+
                         xScale.domain([0, yDomGames]).nice();
 
+                        bounds.selectAll(".voronoi").remove()
 
+                        // console.log(flatData)
+                        // delaunayAge = d3.Delaunay.from(
+                        //     flatData,
+                        //     d =>
+                        //     xScale(d.age),
+                        //     d => yScale(d.cumgoals),
+                        // )
+
+                        function onMouseEnter1(datum, i, nodes) {
+                            // console.log(datum);
+
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id
+                                })
+                                .transition().duration(1)
+                                .style("stroke-width", 4)
+                                .style("stroke-opacity", 1);
+
+
+                            tooltip.select("#name")
+                                .text(capitalizeFirstLetter(names[datum.id]))
+                            tooltip.select("#goals")
+                                .style("font-size", ".7em")
+                                .text(carrerGoals[datum.id] + " career goals")
+
+                            tooltip.style("opacity", .8)
+                            // const xAccessorAge = d => d.age;
+
+                            const x = xScale(xAccessor(datum)) +
+                                dimensions.margin.left
+                            const y = yScale(yAccessor(datum)) +
+                                dimensions.margin.top
+
+                            tooltip.style("transform", `translate(` +
+                                `calc( -50% + ${x}px),` +
+                                `calc(-100% + ${y}px)` +
+                                `)`)
+
+
+                        }
+
+
+
+                        function onMouseLeave1(datum) {
+                            tooltip.style("opacity", 0)
+
+                            d3.selectAll(".lines")
+                                .filter((e) => {
+                                    return e.id === datum.id
+                                })
+                                .transition()
+                                .duration(1)
+                                .style("stroke-width", 2);
+
+                            d3.selectAll(".lines")
+                                // .filter((e) => {
+                                //     return e.id === datum.id
+                                // })
+                                .transition().duration(1)
+                                .style("stroke-opacity", d => {
+                                    if (d.player === 'gretzky' || d.player === 'ovechkin') return 1
+                                    // else if (d.player === 'ovechkin') return 0
+                                    else return 0.1
+
+                                });
+
+                        }
+
+
+                        const voronoi = delaunay.voronoi()
+                        voronoi.xmax = dimensions.boundedWidth;
+                        voronoi.ymax = dimensions.boundedHeight;
+
+                        bounds.selectAll(".voronoi")
+                            .data(flatData)
+                            .enter().append("path")
+                            .attr("class", "voronoi")
+                            .attr("d", (d, i) => voronoi.renderCell(i))
+                            .on("mouseenter", onMouseEnter1)
+                            // .on("mouseleave", onMouseLeave)
+                            .on("mouseout", onMouseLeave1);
 
                         const newline = d3
                             .line()
@@ -753,11 +1065,22 @@
                         // transition lines
                         lines
                             .selectAll("path")
-                            .data(allPlayerGames)
-                            .transition()
+                            // .data(allPlayerGames)
+                            .transition("sortbygames")
                             .duration(1200)
                             .ease(d3.easeLinear)
                             .attr("d", d => lineGenerator(d.data))
+                        // .attr("stroke-opacity", d => {
+                        //         if (d.player === "gretzky") {
+                        //             return 1
+                        //         } else if (d.player === "ovechkin") {
+                        //             return 0
+                        //         } else {
+                        //             return 0.1
+                        //         }
+                        //     }
+
+                        // )
 
 
 
@@ -787,7 +1110,7 @@
 
 
 
-                    console.log(response);
+                    // console.log(response);
                     // response = { element, direction, index }
 
                     // add color to current step only
