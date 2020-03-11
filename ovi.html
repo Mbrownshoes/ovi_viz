@@ -1001,16 +1001,17 @@
                             tooltip.style("opacity", .8)
                             // const xAccessorAge = d => d.age;
 
-                            const x = xScale(xAccessor(datum)) +
-                                dimensions.margin.left
-                            const y = yScale(yAccessor(datum)) +
-                                dimensions.margin.top
+                            // const x = xScale(xAccessor(datum)) +
+                            //     dimensions.margin.left
+                            // const y = yScale(yAccessor(datum)) +
+                            //     dimensions.margin.top
 
-                            tooltip.style("transform", `translate(` +
-                                `calc( -50% + ${x}px),` +
-                                `calc(-100% + ${y}px)` +
-                                `)`)
-
+                            // tooltip.style("transform", `translate(` +
+                            //     `calc( -50% + ${x}px),` +
+                            //     `calc(-100% + ${y}px)` +
+                            //     `)`)
+                            tooltip.style("top", (d3.event.pageY - 10) + "px").style("left", (d3.event.pageX +
+                                10) + "px")
 
                         }
 
