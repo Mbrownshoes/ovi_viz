@@ -16,8 +16,6 @@ body {
   font-size: 24px;
 }
 
-
-
 p,
 h1,
 h2,
@@ -65,7 +63,7 @@ nav {
   margin-top: 1rem;
 }
 
-.nav__examples>* {
+.nav__examples > * {
   margin-right: 0.5rem;
 }
 
@@ -89,7 +87,6 @@ nav {
 }
 
 @keyframes octocat-wave {
-
   0%,
   100% {
     transform: rotate(0);
