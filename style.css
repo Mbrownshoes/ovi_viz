@@ -125,5 +125,6 @@ nav {
   .nav__examples {
     margin-top: 0;
     margin-left: 2rem;
+    /* padding: 0 10% 0 10% ; */
   }
 }
