@@ -37,7 +37,7 @@
         }
 
         .dotplot {
-            padding: 0 10% 0 10%;
+            padding: 10% 10% 0 10%;
         }
 
         article {
@@ -1357,9 +1357,9 @@ last(d.data).cumgoals
                 .range([dimensions.boundedHeight, 0])
                 .nice()
 
-            const svg = d3.select(".dotplot").append("svg")
-                .attr("width", 860)
-                .attr("height", 600)
+            const svg = d3.select(".dotplot").append("svg") .attr("viewBox", [0, 0, 860, 600]);
+                // .attr("width", 860)
+                // .attr("height", 600)
 
             const bounds = svg
                 .append("g")
