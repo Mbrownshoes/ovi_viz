@@ -25,10 +25,19 @@
             margin: auto 0 0 0;
             width: 33%;
         } */
+        #dotplottext{
+            font-size: 18px;
+            padding: 10% 10% 10% 10%;
+            line-height: 1.5;
+        }
         #scrolly {
             position: relative;
             /* background-color: #f3f3f3; */
-            padding: 1rem;
+            padding: 0 10% 0 10%;
+        }
+
+        .dotplot {
+            padding: 0 10% 0 10%;
         }
 
         article {
@@ -155,7 +164,7 @@
     <main>
 
         <section id='scrolly'>
-            <h1>Alex Ovechekin's Quest for 895</h1>
+            <h1 style="text-align: center; ">Alex Ovechkin's Quest for <span style="color: #c7212f;">895</span></h1>
             <figure>
 
             </figure>
@@ -169,7 +178,7 @@
                 </div>
 
                 <div class='step' data-step='2'>
-                    <p>However, Alex Ovechekin recently became the second fast player in NHL history to
+                    <p>However, Alex Ovechkin recently became the second fast player in NHL history to
                         reach 700 goals.</p>
 
                 </div>
@@ -178,21 +187,36 @@
                     </p>
                     <!-- <p>While 6 others, besides Gretzky have reached 700, Ovechkin seems poised to make an attempt at
                         breaking the record.</p> -->
+
                 </div>
-                <!-- <div class='step' data-step='4'>
-                    <p>STEP 4</p>
-                </div> -->
+
+
             </article>
-            <section id="outro"></section>
+
+
 
 
         </section>
 
 
-        <section id='outro'></section>
+        <!-- <section id='outro'>
+            
+
+        </section> -->
+        <div class='dotplot'>
+            <!-- </br></br> -->
+            <p id="dotplottext"> Most forwards typically start to see a dropoff in their production at around 28 years old. While now 34, Ovechkin has been remarkably consistent throughout his career, adding to the speculation that if he continues to play and stays healthy, he has a very good shot of surpassing Gretzky. 
+            <br></br>
+                Adjust the estimated future goals per season (white circles) in the plot below, to see if and when Ovechkin will
+                break the all
+                time goals record.
+            </p>
+        </div>
     </main>
 
     <script src='https://unpkg.com/d3@5.9.1/dist/d3.min.js'></script>
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.1/simple_statistics.js"></script>
 
     <script src="https://unpkg.com/intersection-observer@0.5.1/intersection-observer.js"></script>
@@ -208,6 +232,7 @@
         var figure = scrolly.select("figure");
         var article = scrolly.select("article");
         var step = article.selectAll(".step");
+
 
 
 
@@ -411,7 +436,135 @@
                 // )
 
                 // const voronoi = delaunay.voronoi()
+                // Draw data
+                lines = bounds.append("g")
 
+                console.log(allPlayerGames)
+
+                lines
+                    .selectAll(".line")
+                    .data(allPlayerGames)
+                    .enter()
+                    .append("path")
+                    .attr("d", d => lineGenerator(d.data))
+                    .style("fill", "none")
+                    .attr("class", 'lines')
+                    .attr("id", d => d.player)
+                    .style("stroke", d =>
+                        d.player === "ovechkin" || d.player === "gretzky" ?
+                        colours[d.player] : "black"
+
+
+                    )
+                    .style("stroke-width", 2)
+                    .style("stroke-linejoin", "round")
+                    .attr("stroke-linecap", "round")
+                    .attr("stroke-opacity", d => {
+                            if (d.player === "gretzky") {
+                                return 1
+                            } else if (d.player === "ovechkin") {
+                                return 0
+                            } else {
+                                return 0.1
+                            }
+                        }
+
+                    )
+
+
+                // add label and circle
+                playerLabel = bounds
+                    .selectAll(".label")
+                    .data(allPlayerGames.filter(d => {
+                        return d.player === "gretzky" || d.player === "ovechkin" || d
+                            .player ===
+                            "howe"
+                    }))
+                    .enter()
+                    .append("g")
+                    .attr("transform", d => {
+                        return `translate(${xScale(last(d.data).gameNum)}, ${yScale(
+last(d.data).cumgoals
+)})`;
+                    });
+
+                dots = playerLabel
+                    .append("circle")
+                    .attr("r", 4)
+                    .style("stroke", "white")
+                    .style("fill", d =>
+                        d.player === "ovechkin" || d.player === "gretzky" || d.player ===
+                        "howe" ?
+                        colours[d.player] : "black"
+
+                    )
+                    .style("opacity", d => {
+                        if (d.player === "gretzky") {
+                            return 1
+                        } else if (d.player === "howe") {
+                            return 0.3
+                        } else {
+                            return 0
+                        }
+
+                    });
+
+                playerName = playerLabel
+                    .append("text")
+                    .attr("x", 10)
+                    .attr("y", -4)
+                    .style("font-size", ".6em")
+                    .attr("fill", d => colours[d.player])
+                    .text(d => capitalizeFirstLetter(d.player))
+                    .style("opacity", d => {
+                        if (d.player === "gretzky") {
+                            return 1
+                        } else if (d.player === "howe") {
+                            return 0.3
+                        } else {
+                            return 0
+                        }
+
+                    });
+
+                playerGoals = playerLabel
+                    .append("text")
+                    .attr("x", 10)
+                    .attr("y", 10)
+                    .style("font-size", ".6em")
+                    .attr("fill", d => d.colour)
+                    .text(d => last(d.data).cumgoals)
+                    .style("opacity", d => {
+                        if (d.player === "gretzky") {
+                            return 1
+                        } else if (d.player === "howe") {
+                            return 0.3
+                        } else {
+                            return 0
+                        }
+
+                    });
+
+                grid = g =>
+                    g
+                    .attr("stroke", "black")
+                    .attr("stroke-opacity", 0.1)
+                    .call(g =>
+                        g
+                        .append("g")
+                        .selectAll("line")
+                        .data(yScale.ticks())
+                        .enter()
+                        .append("line")
+                        .attr("y1", d => {
+                            return 0.5 + yScale(d);
+                        })
+                        .attr("x1", 0)
+                        .attr("y2", d => 0.5 + yScale(d))
+                        .attr("x2", dimensions.boundedWidth)
+                    )
+
+                bounds.append("g").call(grid);
 
 
                 // initialize the scrollama
@@ -436,7 +589,7 @@
 
                 // scrollama event handlers
                 function handleStepEnter(response) {
-
+                    console.log(response)
                     // do the stuff here!
                     if (response.index === 0 && response.direction === "down") {
                         console.log("setup chart")
@@ -471,217 +624,90 @@
 
 
 
-                        function onMouseEnter(datum, i, nodes) {
-                            // console.log(datum);
+                        // function onMouseEnter(datum, i, nodes) {
+                        //     // console.log(datum);
 
-                            d3.selectAll(".lines")
-                                .filter((e) => {
-                                    return e.id === datum.id && e.id !== "8471214"
-                                })
-                                .transition().duration(1)
-                                .style("stroke-width", 4)
-                                .style("stroke-opacity", 1);
-
-
-                            // d3.selectAll(".lines")
-                            //     .filter((e) => {
-                            //         return e.id !== datum.id && e.id !== 8471214
-                            //     })
-                            //     .transition().duration(1)
-                            //     // .style("stroke-width", 4)
-                            //     .style("stroke-opacity", 0.1);
+                        //     d3.selectAll(".lines")
+                        //         .filter((e) => {
+                        //             return e.id === datum.id && e.id !== "8471214"
+                        //         })
+                        //         .transition().duration(1)
+                        //         .style("stroke-width", 4)
+                        //         .style("stroke-opacity", 1);
 
 
-                            tooltip
-                                .select("#name")
-                                .html(capitalizeFirstLetter(names[datum.id]))
-
-                            // 
-                            tooltip.select("#goals")
-                                .style("font-size", ".7em")
-                                .text(carrerGoals[datum.id] + " career goals")
-
-                            tooltip.style("opacity", .8)
+                        //     // d3.selectAll(".lines")
+                        //     //     .filter((e) => {
+                        //     //         return e.id !== datum.id && e.id !== 8471214
+                        //     //     })
+                        //     //     .transition().duration(1)
+                        //     //     // .style("stroke-width", 4)
+                        //     //     .style("stroke-opacity", 0.1);
 
 
-                            // const x = xScale(xAccessor(datum)) + dimensions.margin.left
-                            // const y = yScale(yAccessor(datum)) + dimensions.margin.top
-                            // console.log(x, y);
+                        //     tooltip
+                        //         .select("#name")
+                        //         .html(capitalizeFirstLetter(names[datum.id]))
+
+                        //     // 
+                        //     tooltip.select("#goals")
+                        //         .style("font-size", ".7em")
+                        //         .text(carrerGoals[datum.id] + " career goals")
+
+                        //     tooltip.style("opacity", .8)
 
 
-                            tooltip.transition()
-                                .duration(200).style("top", (d3.event.pageY - 10) + "px").style("left", (d3
-                                    .event.pageX +
-                                    10) + "px")
-                            // tooltip.style("transform", `translate(` +
-                            //     `calc( -50% + ${x}px),` +
-                            //     `calc(-10% + ${y}px)` +
-                            //     `)`)
+                        //     // const x = xScale(xAccessor(datum)) + dimensions.margin.left
+                        //     // const y = yScale(yAccessor(datum)) + dimensions.margin.top
+                        //     // console.log(x, y);
 
 
-                        }
+                        //     tooltip.transition()
+                        //         .duration(200).style("top", (d3.event.pageY - 10) + "px").style("left", (d3
+                        //             .event.pageX +
+                        //             10) + "px")
+                        //     // tooltip.style("transform", `translate(` +
+                        //     //     `calc( -50% + ${x}px),` +
+                        //     //     `calc(-10% + ${y}px)` +
+                        //     //     `)`)
+
+
+                        // }
 
 
 
-                        function onMouseLeave(datum) {
-                            tooltip.style("opacity", 0)
+                        // function onMouseLeave(datum) {
+                        //     tooltip.style("opacity", 0)
 
-                            d3.selectAll(".lines")
-                                .filter((e) => {
-                                    return e.id === datum.id
-                                })
-                                .transition()
-                                .duration(1)
-                                .style("stroke-width", 2);
+                        //     d3.selectAll(".lines")
+                        //         .filter((e) => {
+                        //             return e.id === datum.id
+                        //         })
+                        //         .transition()
+                        //         .duration(1)
+                        //         .style("stroke-width", 2);
 
-                            d3.selectAll(".lines")
-                                // .filter((e) => {
-                                //     return e.id === datum.id
-                                // })
-                                .transition().duration(1)
-                                .style("stroke-opacity", d => {
-                                    if (d.player === 'gretzky') return 1
-                                    else if (d.player === 'ovechkin') return 0
-                                    else return 0.1
+                        //     d3.selectAll(".lines")
+                        //         // .filter((e) => {
+                        //         //     return e.id === datum.id
+                        //         // })
+                        //         .transition().duration(1)
+                        //         .style("stroke-opacity", d => {
+                        //             if (d.player === 'gretzky') return 1
+                        //             else if (d.player === 'ovechkin') return 0
+                        //             else return 0.1
 
-                                });
+                        //         });
 
-                        }
-
-
-                        // Draw data
-                        lines = bounds.append("g")
-
-                        console.log(allPlayerGames)
-
-                        lines
-                            .selectAll(".line")
-                            .data(allPlayerGames)
-                            .enter()
-                            .append("path")
-                            .attr("d", d => lineGenerator(d.data))
-                            .style("fill", "none")
-                            .attr("class", 'lines')
-                            .attr("id", d => d.player)
-                            .style("stroke", d =>
-                                d.player === "ovechkin" || d.player === "gretzky" ?
-                                colours[d.player] : "black"
+                        // }
 
 
-                            )
-                            .style("stroke-width", 2)
-                            .style("stroke-linejoin", "round")
-                            .attr("stroke-linecap", "round")
-                            .attr("stroke-opacity", d => {
-                                    if (d.player === "gretzky") {
-                                        return 1
-                                    } else if (d.player === "ovechkin") {
-                                        return 0
-                                    } else {
-                                        return 0.1
-                                    }
-                                }
 
-                            )
-
-
-                        // add label and circle
-                        playerLabel = bounds
-                            .selectAll(".label")
-                            .data(allPlayerGames.filter(d => {
-                                return d.player === "gretzky" || d.player === "ovechkin" || d
-                                    .player ===
-                                    "howe"
-                            }))
-                            .enter()
-                            .append("g")
-                            .attr("transform", d => {
-                                return `translate(${xScale(last(d.data).gameNum)}, ${yScale(
-        last(d.data).cumgoals
-      )})`;
-                            });
-
-                        dots = playerLabel
-                            .append("circle")
-                            .attr("r", 4)
-                            .style("stroke", "white")
-                            .style("fill", d =>
-                                d.player === "ovechkin" || d.player === "gretzky" || d.player ===
-                                "howe" ?
-                                colours[d.player] : "black"
-
-                            )
-                            .style("opacity", d => {
-                                if (d.player === "gretzky") {
-                                    return 1
-                                } else if (d.player === "howe") {
-                                    return 0.3
-                                } else {
-                                    return 0
-                                }
-
-                            });
-
-                        playerName = playerLabel
-                            .append("text")
-                            .attr("x", 10)
-                            .attr("y", -4)
-                            .style("font-size", ".6em")
-                            .attr("fill", d => colours[d.player])
-                            .text(d => capitalizeFirstLetter(d.player))
-                            .style("opacity", d => {
-                                if (d.player === "gretzky") {
-                                    return 1
-                                } else if (d.player === "howe") {
-                                    return 0.3
-                                } else {
-                                    return 0
-                                }
-
-                            });
-
-                        playerGoals = playerLabel
-                            .append("text")
-                            .attr("x", 10)
-                            .attr("y", 10)
-                            .style("font-size", ".6em")
-                            .attr("fill", d => d.colour)
-                            .text(d => last(d.data).cumgoals)
-                            .style("opacity", d => {
-                                if (d.player === "gretzky") {
-                                    return 1
-                                } else if (d.player === "howe") {
-                                    return 0.3
-                                } else {
-                                    return 0
-                                }
-
-                            });
-
-                        grid = g =>
-                            g
-                            .attr("stroke", "black")
-                            .attr("stroke-opacity", 0.1)
-                            .call(g =>
-                                g
-                                .append("g")
-                                .selectAll("line")
-                                .data(yScale.ticks())
-                                .enter()
-                                .append("line")
-                                .attr("y1", d => {
-                                    return 0.5 + yScale(d);
-                                })
-                                .attr("x1", 0)
-                                .attr("y2", d => 0.5 + yScale(d))
-                                .attr("x2", dimensions.boundedWidth)
-                            )
-
-                        bounds.append("g").call(grid);
 
 
                     }
                     if (response.index === 1 && response.direction === "down") {
+                        console.log(response)
                         // animate Ovi's goals
                         // adapted from https://observablehq.com/@d3/connected-scatterplot 
 
@@ -932,7 +958,7 @@
                         }
 
                         // implement to avoid rough transition
-                        sleep(1000).then(() => {
+                        sleep(1200).then(() => {
                             console.log("now")
                             bounds.selectAll(".voronoi").remove()
 
@@ -1185,6 +1211,11 @@
 
                     }
 
+                    // if (response.index === 3) {
+                    //     d3.json("getOvi.json", d3.autoType).then(allPlayerGames => {})
+
+                    // }
+
 
 
 
@@ -1232,6 +1263,315 @@
 
         // kick things off
         init();
+
+        /// setup final plot
+        d3.json("getOvi.json", d3.autoType).then(oviNhlStats => {
+            const width = 800,
+                height = 600
+            dimensions = {
+                width: width,
+                height: height,
+                margin: {
+                    top: 20,
+                    right: 70,
+                    bottom: 50,
+                    left: 50
+                }
+            };
+            dimensions.boundedWidth = dimensions.width - dimensions.margin.right - dimensions.margin.left;
+            dimensions.boundedHeight = dimensions.height - dimensions.margin.top - dimensions.margin.bottom;
+            //   return d;
+            // }
+
+            // console.log(oviNhlStats)
+            const futureStats = [{
+                    season: "2020-2021",
+                    goals: 45,
+                    games: 82,
+                    future: 1
+                },
+                {
+                    season: "2021-2022",
+                    goals: 51,
+                    games: 82,
+                    future: 1
+                },
+                {
+                    season: "2022-2023",
+                    goals: 40,
+                    games: 82,
+                    future: 1
+                },
+                {
+                    season: "2023-2024",
+                    goals: 34,
+                    games: 82,
+                    future: 1
+                },
+                {
+                    season: "2024-2025",
+                    goals: 35,
+                    games: 82,
+                    future: 1
+                },
+                {
+                    season: "2025-2026",
+                    goals: 30,
+                    games: 82,
+                    future: 1
+                }
+            ]
+            const years = oviNhlStats.map(d => d.season)
+            oviClean = oviNhlStats.map(d => {
+                return {
+                    season: d.season.slice(0, 4) + "-" + d.season.slice(4),
+                    goals: d.stat.goals,
+                    games: d.stat.games,
+                    future: 0
+                };
+            })
+
+            // allData = {
+            const data = d3.merge([oviClean, futureStats]);
+            const allData = [];
+            const cumG = d3.cumsum(data, d => d.goals);
+            data.forEach((d, i) => {
+                cumG[i] >= 894 ? (d.record = 1) : (d.record = 0);
+                d.cumgoals = cumG[i];
+                allData.push(d);
+            });
+
+            // }
+            const xAccessor = d => d.season;
+            const yAccessor = d => d.goals;
+
+            const xScale = d3
+                .scalePoint()
+                .domain(allData.map(d => d.season))
+                .range([0, dimensions.boundedWidth])
+
+            const yScale = d3
+                .scaleLinear()
+                .domain([0, d3.max(allData, yAccessor) + 5])
+                .range([dimensions.boundedHeight, 0])
+                .nice()
+
+            const svg = d3.select(".dotplot").append("svg")
+                .attr("width", 860)
+                .attr("height", 600)
+
+            const bounds = svg
+                .append("g")
+                .style(
+                    "transform",
+                    `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`
+                );
+
+            let recdatum = allData.filter(d => d.record === 1);
+            if (recdatum.length === 0) {
+                recdatum = [allData[allData.length - 1]];
+            }
+            // console.log("right", recdatum, allData[allData.length - 1]);
+
+            const recordLine = bounds
+                .append("line")
+                .datum(recdatum[0])
+                .attr("x1", d => {
+                    // console.log(d);
+                    return xScale(xAccessor(d));
+                })
+                .attr("x2", d => xScale(xAccessor(d)))
+                .attr("y1", 20)
+                .attr("y2", dimensions.boundedHeight)
+                .attr("fill", "none")
+                .attr("stroke", "deeppink")
+                .attr("stoke-width", 1.5)
+                .attr("stroke-linejoin", "round")
+                .attr("stroke-dasharray", "10 10")
+                .attr("stroke-opacity", 0.8);
+
+            const recordLabel = bounds
+                .append("text")
+                .datum(recdatum[0])
+                .attr("x", d => xScale(xAccessor(d)))
+                .attr("y", 15)
+                .text("Breaks Gretzky's record!")
+                .attr("fill", "#c7212f")
+                .attr("font-size", "0.8em")
+                .attr("text-anchor", "middle");
+
+            const circles = bounds.selectAll("circle").data(allData);
+
+            const circleG = circles
+                .enter()
+                .append("g")
+                .call(
+                    d3
+                    .drag()
+                    .on("start", draggedstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended)
+                )
+                .style("cursor", "move")
+                .style("pointer-events", "all");
+
+            circleG
+                .append("circle")
+                .attr("cx", d => {
+                    return xScale(xAccessor(d));
+                })
+                .attr("cy", d => yScale(yAccessor(d)))
+                .attr("r", 10)
+                .attr("fill", d => (d.future === 0 ? "black" : "white"))
+                .attr("stroke", d => (d.future === 0 ? null : "black"));
+
+            circleG
+                .append("text")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", 10)
+                .attr("stroke-linecap", "round")
+                .attr("stroke-linejoin", "round")
+                .attr("text-anchor", "middle")
+                .attr('fill', '#c7212f')
+                // .selectAll("text")
+                // .data(allData.filter(d => d.future === 1))
+                // .enter()
+                // .append("text")
+                .attr("x", d => xScale(xAccessor(d)))
+                .attr("y", d => yScale(yAccessor(d)))
+                .attr("dy", "0.35em")
+
+                // .attr("font-weight", "normal")
+                // .attr("fill", "red")
+                .text(d => (d.future === 0 ? null : d.goals));
+
+            const xAxisGenerator = d3
+                .axisBottom()
+                .scale(xScale)
+                .tickFormat((x, i) => (i % 2 === 1 ? x : ""));
+
+            const xAxis = bounds
+                .append("g")
+                .call(xAxisGenerator)
+                .style("transform", `translateY(${dimensions.boundedHeight}px)`)
+                .call(g =>
+                    g
+                    .append("text")
+                    .attr("x", 0)
+                    .attr("y", 30)
+                    .attr("fill", "black")
+                    .attr("text-anchor", "start")
+                    .text("NHL Season")
+                );
+
+            const yAxisGenerator = d3.axisLeft().scale(yScale);
+
+            const yAxis = bounds
+                .append("g")
+                .call(yAxisGenerator)
+                .call(g =>
+                    g
+                    .select(".tick:last-of-type text")
+                    .clone()
+                    // .append("text")
+                    .attr("x", 0)
+                    .attr("y", -5)
+                    .attr("fill", "black")
+                    .attr("text-anchor", "start")
+                    .attr("font-weight", "bold")
+                    .text("↑ Goals Per Season")
+                );
+
+            // function drag() {
+            //   console.log(this);
+            function draggedstarted(d) {
+                // if (d.future === 1)
+                //   d3.select(this)
+                //     .raise()
+                //     .attr("stroke", "red");
+            }
+
+            function dragged(d) {
+                // console.log("here", d);
+                let mouseposition = d3.mouse(this);
+                // console.log(d, yScale.invert(d3.event.y));
+
+                // update dataset with selected values
+                allData.forEach(y => {
+                    if (y.season === d.season)
+                        d.goals = Math.round(yScale.invert(d3.event.y));
+                });
+
+                const cumG = d3.cumsum(allData, d => d.goals);
+                allData.forEach((d, i) => {
+                    cumG[i] >= 894 ? (d.record = 1) : (d.record = 0);
+                    d.cumgoals = cumG[i];
+                });
+
+                // update record line
+                recdatum = allData.filter(d => d.record === 1);
+                if (recdatum.length === 0) {
+                    recdatum = [allData[allData.length - 1]];
+                }
+
+                let isBelowMax = d3.event.y >= yScale(65);
+                let isAboveMin = d3.event.y <= yScale(0);
+
+                if (d.future === 1 && (isBelowMax && isAboveMin)) {
+                    d3.select(this)
+                        .select("circle")
+                        .attr('cy', (d.y = d3.event.y));
+
+                    d3.select(this)
+                        .select("text")
+                        .attr("y", (d.y = d3.event.y))
+                        .attr("dy", "0.35em")
+                        .transition()
+                        .duration(100)
+                        .text(Math.round(yScale.invert(mouseposition[1])));
+
+                    recordLine
+                        .datum(recdatum[0])
+                        .transition()
+                        .duration(1200)
+                        .attr("x1", d => {
+                            return xScale(xAccessor(d));
+                        })
+                        .attr("x2", d => xScale(xAccessor(d)))
+                        .attr("y1", d => (d.record === 0 ? dimensions.boundedHeight : 20))
+                        .attr("y2", dimensions.boundedHeight);
+                    // .attr("opacity", d => {
+                    //   return d.record === 0 ? 0 : 0.8;
+                    // });
+
+                    recordLabel
+                        .datum(recdatum[0])
+                        .transition()
+                        .duration(1200)
+                        .attr("x", d => xScale(xAccessor(d)))
+                        .attr("y", 15);
+
+                    recordLabel
+                        // .transition()
+                        // .duration(600)
+                        // .style("opacity", 0)
+                        .text(d =>
+                            d.record === 0 ? "Record not broken" : "Breaks Gretzky's record!"
+                        );
+                    // .transition()
+                    // .duration(600)
+                    // .style("opacity", 1);
+                }
+            }
+
+            function dragended(d) {
+                if (d.future === 1) d3.select(this).attr('fill', '#c7212f');
+            }
+
+        })
+
+
+        ///
     </script>
 
 
